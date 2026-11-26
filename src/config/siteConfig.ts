@@ -48,8 +48,7 @@ export const siteConfig: SiteConfig = {
 	subtitle: "记录技术与生活",
 
 	// 站点 URL
-	// TODO: Cloudflare 上 Worker 建好后，把这里换成真实域名（如 https://jinlen-blog.<你的子域>.workers.dev）
-	site_url: "https://jinlen-blog.workers.dev",
+	site_url: "https://www.jinlen-it.com",
 
 	// 站点描述
 	description:
