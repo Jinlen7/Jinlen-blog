@@ -1,8 +1,8 @@
 ---
 title: 数据结构与算法刷题笔记（从双指针到动态规划）
 published: 2026-11-27
-description: 按题目线索选择算法，整理双指针、链表、滑动窗口、二叉树、回溯、BFS、动态规划、贪心和分治的解题步骤与 JavaScript 示例。
-tags: [算法, 数据结构, 刷题笔记, JavaScript]
+description: 按题目线索选择算法，整理双指针、链表、滑动窗口、二叉树、回溯、BFS、动态规划、贪心和分治的解题步骤与 Java 模板。
+tags: [算法, 数据结构, 刷题笔记, Java]
 category: 技术笔记
 draft: false
 slug: algorithm-problem-solving-frameworks
@@ -10,7 +10,7 @@ slug: algorithm-problem-solving-frameworks
 
 拿到一道题，先想清楚**如果时间不限，我会枚举什么**，再找能减少重复工作的信息。有序数组可以直接排除一段候选，滑动窗口可以沿用上一个区间的统计，动态规划可以把相同子问题的答案保存下来。这些框架都能从一个说得清楚的朴素解法推出来。
 
-这篇笔记以 labuladong 第零章为参考，按做题时的判断顺序整理。示例统一用 JavaScript，题号均为 LeetCode 题号，方便回头练习。[第零章导读](https://labuladong.online/zh/algo/intro/core-intro/) · [框架思维](https://labuladong.online/zh/algo/essential-technique/algorithm-summary/)
+这篇笔记以 labuladong 第零章为参考，按做题时的判断顺序整理。代码统一用 Java。刷题时，把方法和它依赖的辅助方法放进 `class Solution`，有 `import` 的模板把导入语句放到类声明上方。题号均为 LeetCode 题号。[第零章导读](https://labuladong.online/zh/algo/intro/core-intro/) · [框架思维](https://labuladong.online/zh/algo/essential-technique/algorithm-summary/)
 
 ## 拿到题目，先选搜索范围
 
@@ -31,39 +31,40 @@ slug: algorithm-problem-solving-frameworks
 
 ## 数组双指针
 
-有序数组求两数之和时，把指针放到两端。当前和偏小，左端和右端之间的任意数相加都不会更大，因此可以丢掉左端。当前和偏大，同理可以丢掉右端。代码返回零基下标，找不到时返回 `null`。
+有序数组求两数之和时，把指针放到两端。当前和偏小，把左端固定后，与区间内其他候选相加只会得到更小或相同的和，因此可以丢掉左端。当前和偏大，同理可以丢掉右端。模板返回零基下标，找不到时返回 `null`。练习第 167 题时，需要按题目要求返回从 1 开始的下标。
 
-```js
-function findSortedPair(nums, target) {
-  let left = 0;
-  let right = nums.length - 1;
+```java
+public int[] findSortedPair(int[] nums, long target) {
+    int left = 0;
+    int right = nums.length - 1;
 
-  while (left < right) {
-    const sum = nums[left] + nums[right];
-    if (sum === target) return [left, right];
-
-    if (sum < target) {
-      left++;
-    } else {
-      right--;
+    while (left < right) {
+        long sum = (long) nums[left] + nums[right];
+        if (sum == target) {
+            return new int[] {left, right};
+        }
+        if (sum < target) {
+            left++;
+        } else {
+            right--;
+        }
     }
-  }
-  return null;
+    return null;
 }
 ```
 
 原地修改数组时，给两个下标不同的职责。读指针负责读完数组，写指针始终指着下一个可写位置。下面用这个模式移除指定值，函数返回有效前缀的长度。
 
-```js
-function keepOtherValues(nums, unwanted) {
-  let write = 0;
-  for (const value of nums) {
-    if (value !== unwanted) {
-      nums[write] = value;
-      write++;
+```java
+public int keepOtherValues(int[] nums, int unwanted) {
+    int write = 0;
+    for (int value : nums) {
+        if (value != unwanted) {
+            nums[write] = value;
+            write++;
+        }
     }
-  }
-  return write;
+    return write;
 }
 ```
 
@@ -73,55 +74,61 @@ function keepOtherValues(nums, unwanted) {
 
 ## 单链表的节点位置关系
 
-链表只能沿着 `next` 往前走。要找倒数第 `k` 个节点，可以先用快指针走 `k` 步，再让两个指针同步前进。快指针离开链尾时，慢指针正好指着目标节点。下面的写法假定 `k` 为正整数，链表长度不足时返回 `null`。
+链表只能沿着 `next` 往前走。要找倒数第 `k` 个节点，可以先用快指针走 `k` 步，再让两个指针同步前进。快指针离开链尾时，慢指针正好指着目标节点。下面的模板使用 LeetCode 提供的 `ListNode`。当 `k` 小于 1 或链表长度不足时，返回 `null`。
 
-```js
-function kthFromEnd(head, k) {
-  let ahead = head;
-  for (let step = 0; step < k; step++) {
-    if (ahead === null) return null;
-    ahead = ahead.next;
-  }
+```java
+public ListNode kthFromEnd(ListNode head, int k) {
+    if (k < 1) {
+        return null;
+    }
 
-  let behind = head;
-  while (ahead !== null) {
-    ahead = ahead.next;
-    behind = behind.next;
-  }
-  return behind;
+    ListNode ahead = head;
+    for (int step = 0; step < k; step++) {
+        if (ahead == null) {
+            return null;
+        }
+        ahead = ahead.next;
+    }
+
+    ListNode behind = head;
+    while (ahead != null) {
+        ahead = ahead.next;
+        behind = behind.next;
+    }
+    return behind;
 }
 
-function middleNode(head) {
-  let slow = head;
-  let fast = head;
-  while (fast !== null && fast.next !== null) {
-    slow = slow.next;
-    fast = fast.next.next;
-  }
-  return slow; // 偶数个节点时得到后一个中点
+public ListNode middleNode(ListNode head) {
+    ListNode slow = head;
+    ListNode fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    return slow; // 偶数个节点时得到后一个中点
 }
 ```
 
 两倍速度同样能用于判环。若有环，快指针进入环后每轮相对慢指针多走一步，最终会追上它。相遇后，把其中一个指针放回表头，再让两者每次各走一步。假设入环前走了 `a` 步，相遇点距离入口 `b` 步，那么 `a + b` 是环长的整数倍，所以两个指针会在入口再次相遇。
 
-```js
-function cycleEntry(head) {
-  let slow = head;
-  let fast = head;
+```java
+public ListNode cycleEntry(ListNode head) {
+    ListNode slow = head;
+    ListNode fast = head;
 
-  while (fast !== null && fast.next !== null) {
-    slow = slow.next;
-    fast = fast.next.next;
-    if (slow === fast) {
-      let fromHead = head;
-      while (fromHead !== slow) {
-        fromHead = fromHead.next;
+    while (fast != null && fast.next != null) {
         slow = slow.next;
-      }
-      return fromHead;
+        fast = fast.next.next;
+        if (slow == fast) {
+            ListNode fromHead = head;
+            while (fromHead != slow) {
+                fromHead = fromHead.next;
+                slow = slow.next;
+            }
+            return fromHead;
+        }
     }
-  }
-  return null;
+    return null;
 }
 ```
 
@@ -149,44 +156,48 @@ function cycleEntry(head) {
 
 例如，求最多包含 `limit` 个零的最长区间，其中 `limit` 是非负整数。窗口中的 `zeros` 可以随增删及时更新，超过上限时，继续往右扩也不会让零变少，所以可以把左端一路挪到窗口重新合法。
 
-```js
-function longestWithAtMostKZeros(nums, limit) {
-  let left = 0;
-  let right = 0;
-  let zeros = 0;
-  let best = 0;
+```java
+public int longestWithAtMostKZeros(int[] nums, int limit) {
+    int left = 0;
+    int right = 0;
+    int zeros = 0;
+    int best = 0;
 
-  while (right < nums.length) {
-    if (nums[right] === 0) zeros++;
-    right++;
+    while (right < nums.length) {
+        if (nums[right] == 0) {
+            zeros++;
+        }
+        right++;
 
-    while (zeros > limit) {
-      if (nums[left] === 0) zeros--;
-      left++;
+        while (zeros > limit) {
+            if (nums[left] == 0) {
+                zeros--;
+            }
+            left++;
+        }
+        best = Math.max(best, right - left);
     }
-    best = Math.max(best, right - left);
-  }
-  return best;
+    return best;
 }
 ```
 
 最短区间的更新点正好在收缩之前。以非负数组中求和至少为正数 `target` 的最短区间为例，固定右端后，逐个删除左端元素。窗口仍达标时就更新最短长度，直到当前窗口的和小于 `target`。
 
-```js
-function shortestAtLeast(nums, target) {
-  let left = 0;
-  let sum = 0;
-  let best = Infinity;
+```java
+public int shortestAtLeast(int[] nums, long target) {
+    int left = 0;
+    long sum = 0;
+    int best = Integer.MAX_VALUE;
 
-  for (let right = 0; right < nums.length; right++) {
-    sum += nums[right];
-    while (sum >= target) {
-      best = Math.min(best, right - left + 1);
-      sum -= nums[left];
-      left++;
+    for (int right = 0; right < nums.length; right++) {
+        sum += nums[right];
+        while (sum >= target) {
+            best = Math.min(best, right - left + 1);
+            sum -= nums[left];
+            left++;
+        }
     }
-  }
-  return best === Infinity ? 0 : best;
+    return best == Integer.MAX_VALUE ? 0 : best;
 }
 ```
 
@@ -201,26 +212,31 @@ function shortestAtLeast(nums, target) {
 - **遍历思路**。进入节点时就知道从根走到了第几层，于是把 `depth` 作为参数传给孩子。类似场景还有根到叶子的路径和、收集所有路径。
 - **分解思路**。约定 `depthFrom(node)` 返回以 `node` 为根的树的最大深度。拿到左、右子树的结果后，加上当前节点即可。类似场景还有计算子树大小、检查平衡、计算树的直径。
 
-```js
-function maxDepthFromRoot(root) {
-  let deepest = 0;
+两个模板都使用 LeetCode 提供的 `TreeNode`。遍历写法用长度为 1 的数组在递归调用之间共享本次遍历的最大深度。
 
-  function visit(node, depth) {
-    if (node === null) return;
-    deepest = Math.max(deepest, depth);
-    visit(node.left, depth + 1);
-    visit(node.right, depth + 1);
-  }
-
-  visit(root, 1);
-  return deepest;
+```java
+public int maxDepthFromRoot(TreeNode root) {
+    int[] deepest = {0};
+    visitDepth(root, 1, deepest);
+    return deepest[0];
 }
 
-function depthFrom(node) {
-  if (node === null) return 0;
-  const left = depthFrom(node.left);
-  const right = depthFrom(node.right);
-  return 1 + Math.max(left, right);
+private void visitDepth(TreeNode node, int depth, int[] deepest) {
+    if (node == null) {
+        return;
+    }
+    deepest[0] = Math.max(deepest[0], depth);
+    visitDepth(node.left, depth + 1, deepest);
+    visitDepth(node.right, depth + 1, deepest);
+}
+
+public int depthFrom(TreeNode node) {
+    if (node == null) {
+        return 0;
+    }
+    int left = depthFrom(node.left);
+    int right = depthFrom(node.right);
+    return 1 + Math.max(left, right);
 }
 ```
 
@@ -236,27 +252,31 @@ function depthFrom(node) {
 
 下面以从不同数字中选 `k` 个为例。`start` 限制下一个下标，确保同一组数字只产生一次。可选元素少于剩余名额时，可以停止在该层继续尝试。保存答案时复制 `path`，否则后续撤销会把已保存的答案也改掉。
 
-```js
-function chooseK(values, k) {
-  const result = [];
-  const path = [];
+```java
+import java.util.ArrayList;
+import java.util.List;
 
-  function search(start) {
-    if (path.length === k) {
-      result.push([...path]);
-      return;
+public List<List<Integer>> chooseK(int[] values, int k) {
+    List<List<Integer>> result = new ArrayList<>();
+    if (k >= 0 && k <= values.length) {
+        collectCombinations(values, k, 0, new ArrayList<>(), result);
+    }
+    return result;
+}
+
+private void collectCombinations(
+        int[] values, int k, int start, List<Integer> path, List<List<Integer>> result) {
+    int remaining = k - path.size();
+    if (remaining == 0) {
+        result.add(new ArrayList<>(path));
+        return;
     }
 
-    const remaining = k - path.length;
-    for (let i = start; i <= values.length - remaining; i++) {
-      path.push(values[i]);
-      search(i + 1);
-      path.pop();
+    for (int i = start; i <= values.length - remaining; i++) {
+        path.add(values[i]);
+        collectCombinations(values, k, i + 1, path, result);
+        path.remove(path.size() - 1);
     }
-  }
-
-  search(0);
-  return result;
 }
 ```
 
@@ -276,25 +296,36 @@ function chooseK(values, k) {
 
 迷宫里的格子、拼图的摆法、游戏角色的当前位置和剩余次数，都可以是状态。一次合法操作对应一条边。当每条边都代表一步时，从起点按层向外扩展，第一次到达目标的层数就是最少步数。
 
-下面把“如何找邻居”留给参数 `neighbors`，同一个框架可用于普通图和题目中临时生成的状态图。节点使用可直接比较的唯一标识，例如编号或字符串。将新状态标为已访问的时机是**入队时**，这样同一层的多个节点就不会重复把它加入队列。
+下面把“如何找邻居”留给参数 `neighbors`，同一个框架可用于普通图和题目中临时生成的状态图。例如 `graph` 是邻接表时，可以传入 `node -> graph.get(node)`。用非空的编号或字符串标识状态。将新状态标为已访问的时机是**入队时**，这样同一层的多个节点就不会重复把它加入队列。
 
-```js
-function shortestSteps(start, target, neighbors) {
-  const queue = [start];
-  const distance = new Map([[start, 0]]);
+```java
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.function.Function;
 
-  for (let head = 0; head < queue.length; head++) {
-    const state = queue[head];
-    const steps = distance.get(state);
-    if (state === target) return steps;
+public <T> int shortestSteps(T start, T target, Function<T, Iterable<T>> neighbors) {
+    Queue<T> queue = new ArrayDeque<>();
+    Map<T, Integer> distance = new HashMap<>();
+    queue.offer(start);
+    distance.put(start, 0);
 
-    for (const next of neighbors(state)) {
-      if (distance.has(next)) continue;
-      distance.set(next, steps + 1);
-      queue.push(next);
+    while (!queue.isEmpty()) {
+        T state = queue.poll();
+        int steps = distance.get(state);
+        if (state.equals(target)) {
+            return steps;
+        }
+
+        for (T next : neighbors.apply(state)) {
+            if (!distance.containsKey(next)) {
+                distance.put(next, steps + 1);
+                queue.offer(next);
+            }
+        }
     }
-  }
-  return -1;
+    return -1;
 }
 ```
 
@@ -310,23 +341,26 @@ function shortestSteps(start, target, neighbors) {
 
 1. **状态**。`best[a]` 表示恰好凑出金额 `a` 所需的最少硬币数。
 2. **选择与转移**。最后一枚硬币若选 `coin`，前面必须已经凑出 `a - coin`，代价是 `best[a - coin] + 1`。在所有可选面额中取最小值。
-3. **初始化**。金额 `0` 需要 `0` 枚硬币，其他金额先记作不可达。
+3. **初始化**。金额 `0` 需要 `0` 枚硬币。任何可达金额需要的硬币数都不超过 `amount`，因此可以用 `amount + 1` 标记不可达。
 4. **计算顺序与答案**。从小金额算到大金额，使读到的依赖值都已计算。最后返回 `best[amount]`，不可达时返回 `-1`。
 
-```js
-function minimumCoins(coins, amount) {
-  const best = Array(amount + 1).fill(Infinity);
-  best[0] = 0;
+```java
+import java.util.Arrays;
 
-  for (let sum = 1; sum <= amount; sum++) {
-    for (const coin of coins) {
-      if (coin <= sum) {
-        const withCoin = best[sum - coin] + 1;
-        if (withCoin < best[sum]) best[sum] = withCoin;
-      }
+public int minimumCoins(int[] coins, int amount) {
+    int unreachable = amount + 1;
+    int[] best = new int[amount + 1];
+    Arrays.fill(best, unreachable);
+    best[0] = 0;
+
+    for (int sum = 1; sum <= amount; sum++) {
+        for (int coin : coins) {
+            if (coin <= sum && best[sum - coin] != unreachable) {
+                best[sum] = Math.min(best[sum], best[sum - coin] + 1);
+            }
+        }
     }
-  }
-  return Number.isFinite(best[amount]) ? best[amount] : -1;
+    return best[amount] == unreachable ? -1 : best[amount];
 }
 ```
 
@@ -342,19 +376,23 @@ function minimumCoins(coins, amount) {
 
 例如，从若干 `start < end` 的活动区间中选出尽量多的互不重叠活动，两个区间的端点可以相接。每次选结束时间最早、且能接在已选活动后面的活动。任取一个最优安排，把第一个活动换成结束最早的活动，后面的活动依然都能开始，所选数量也没变。
 
-```js
-function maxNonOverlappingIntervals(intervals) {
-  const ordered = [...intervals].sort((a, b) => a[1] - b[1]);
-  let count = 0;
-  let previousEnd = -Infinity;
+```java
+import java.util.Arrays;
+import java.util.Comparator;
 
-  for (const [start, end] of ordered) {
-    if (start >= previousEnd) {
-      count++;
-      previousEnd = end;
+public int maxNonOverlappingIntervals(int[][] intervals) {
+    int[][] ordered = intervals.clone();
+    Arrays.sort(ordered, Comparator.comparingInt(interval -> interval[1]));
+    int count = 0;
+    int previousEnd = Integer.MIN_VALUE;
+
+    for (int[] interval : ordered) {
+        if (interval[0] >= previousEnd) {
+            count++;
+            previousEnd = interval[1];
+        }
     }
-  }
-  return count;
+    return count;
 }
 ```
 
@@ -366,32 +404,33 @@ function maxNonOverlappingIntervals(intervals) {
 
 分治适合把问题拆成规模更小、能够分别求解的部分。写代码时先确定最小可直接处理的规模，再确定拆分边界和合并规则。例如归并排序先递归排好左右半段，再用两个下标取较小值，一次扫描合成有序区间。下面返回排序后的副本，原数组可以继续使用。
 
-```js
-function mergeSort(values) {
-  const sorted = [...values];
-  const buffer = Array(sorted.length);
+```java
+public int[] mergeSort(int[] values) {
+    int[] sorted = values.clone();
+    int[] buffer = new int[sorted.length];
+    sortRange(sorted, buffer, 0, sorted.length);
+    return sorted;
+}
 
-  function sortRange(start, end) {
-    if (end - start < 2) return;
-
-    const mid = start + Math.floor((end - start) / 2);
-    sortRange(start, mid);
-    sortRange(mid, end);
-
-    let left = start;
-    let right = mid;
-    for (let write = start; write < end; write++) {
-      if (left < mid && (right === end || sorted[left] <= sorted[right])) {
-        buffer[write] = sorted[left++];
-      } else {
-        buffer[write] = sorted[right++];
-      }
+private void sortRange(int[] sorted, int[] buffer, int start, int end) {
+    if (end - start < 2) {
+        return;
     }
-    for (let i = start; i < end; i++) sorted[i] = buffer[i];
-  }
 
-  sortRange(0, sorted.length);
-  return sorted;
+    int mid = start + (end - start) / 2;
+    sortRange(sorted, buffer, start, mid);
+    sortRange(sorted, buffer, mid, end);
+
+    int left = start;
+    int right = mid;
+    for (int write = start; write < end; write++) {
+        if (left < mid && (right == end || sorted[left] <= sorted[right])) {
+            buffer[write] = sorted[left++];
+        } else {
+            buffer[write] = sorted[right++];
+        }
+    }
+    System.arraycopy(buffer, start, sorted, start, end - start);
 }
 ```
 
@@ -409,6 +448,6 @@ function mergeSort(values) {
 | 动态规划 | 状态数量乘每个状态评估的转移数量 | 状态表，记忆化递归还要算调用栈 |
 | 分治 | 分开计算各层处理量，再加总 | 合并缓冲区、递归栈 |
 
-开始写代码前，用输入上限筛掉明显过慢的方案。写完再手算空输入、单元素、重复值、无解和刚好卡在边界上的例子。单独检查实现中的操作成本，例如循环里反复对 JavaScript 数组调用 `shift()`，可能为元素搬移付出额外开销。BFS 示例通过队头下标读取元素，就省掉了这部分工作。[复杂度分析原文](https://labuladong.online/zh/algo/essential-technique/complexity-analysis/)
+开始写代码前，用输入上限筛掉明显过慢的方案。写完再手算空输入、单元素、重复值、无解和刚好卡在边界上的例子。单独检查实现中的操作成本，例如反复调用 `ArrayList.remove(0)` 会移动后面的元素。BFS 模板用 `ArrayDeque` 在队尾插入、队头取出，入队和出队的摊还时间是 `O(1)`。[复杂度分析原文](https://labuladong.online/zh/algo/essential-technique/complexity-analysis/)
 
 复习可以按 `167 → 19 → 3 → 104 → 77 → 752 → 322 → 435 → 912` 的顺序各练一个框架。每道题做完留三行笔记，分别写下**选这个框架的依据、保证没有漏解的不变量、最容易写错的边界**。下次遇到变体，先尝试重新写出这三行，再打开代码对照。
